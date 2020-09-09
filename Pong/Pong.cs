@@ -6,7 +6,6 @@ namespace Pong
 {
     /// <summary>
     /// This is the main type for your game.
-    /// ganggang
     /// </summary>
     public class Pong : Game
     {
@@ -63,7 +62,6 @@ namespace Pong
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
                 Exit();
-                //test
             }
             // TODO: Add your update logic here
 
