@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using System.Net.Mime;
 
 namespace Pong
 {
@@ -11,6 +13,28 @@ namespace Pong
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+
+        //variables for the game sprites
+        Texture2D ball;
+        Texture2D red_player;
+        Texture2D blue_player;
+
+        //variables for the positions
+        private double red_position;
+        private double blue_position;
+        private Vector2 ball_position;
+
+        //variables for speed
+        private double paddle_speed;
+        private double ball_defaultspeed;
+        private float bounce_increase;
+
+        //variables for angles
+        private Vector2 ball_speed;
+
+        //random class
+        static Random rng = new Random();
+        private double divider;
 
         public Pong()
         {
@@ -26,7 +50,10 @@ namespace Pong
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            // Change window size to a larger size.
+            graphics.PreferredBackBufferWidth = 900;  
+            graphics.PreferredBackBufferHeight = 600;   
+            graphics.ApplyChanges();
 
             base.Initialize();
         }
@@ -40,7 +67,18 @@ namespace Pong
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
+            ball = Content.Load<Texture2D>("ball");
+            red_player = Content.Load<Texture2D>("red_player");
+            blue_player = Content.Load<Texture2D>("blue_player");
+
+            //set default variables
+            red_position = 300.0 - red_player.Height/2;
+            blue_position = 300.0 - blue_player.Height / 2;
+            paddle_speed = 10.0;
+            bounce_increase = 1.01f;
+
+            ball_defaultspeed = 7.0;
+            resetBall();
         }
 
         /// <summary>
@@ -59,11 +97,62 @@ namespace Pong
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            //reset ball
+            if (ball_position.X < -100 || ball_position.X > 1000)
+            {
+                resetBall();
+            }
+
+
+            //Exit
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
                 Exit();
             }
-            // TODO: Add your update logic here
+
+            //RED PLAYER UP
+            if(Keyboard.GetState().IsKeyDown(Keys.W) && red_position > 0)
+            {
+                red_position -= paddle_speed;
+            }
+            //RED PLAYER DOWN
+            if (Keyboard.GetState().IsKeyDown(Keys.S) && red_position < 600 - red_player.Height)
+            {
+                red_position += paddle_speed;
+            }
+            //BLUE PLAYER UP
+            if (Keyboard.GetState().IsKeyDown(Keys.Up) && blue_position > 0)
+            {
+                blue_position -= paddle_speed;
+            }
+            //BLUE PLAYER DOWN
+            if (Keyboard.GetState().IsKeyDown(Keys.Down) && blue_position < 600 - blue_player.Height)
+            {
+                blue_position += paddle_speed;
+            }
+
+            //change ball position
+            ball_position = Vector2.Add(ball_position, ball_speed);
+
+            //check boundaries of ball position
+            if(ball_position.Y >= 600 - ball.Height || ball_position.Y <= 0)
+            {
+                ball_speed.Y *= -1;
+            }
+
+            if(ball_position.X < red_player.Width && ball_position.Y > red_position && ball_position.Y < red_position + red_player.Height)
+            {
+                ball_speed.X *= -1;
+                ball_speed.X *= bounce_increase;
+                ball_speed.Y *= bounce_increase;
+            }
+      
+            if (ball_position.X > 900 - blue_player.Width - ball.Width && ball_position.X < 900 && ball_position.Y > blue_position && ball_position.Y < blue_position + blue_player.Height)
+            {
+                ball_speed.X *= -1;
+                ball_speed.X *= bounce_increase;
+                ball_speed.Y *= bounce_increase;
+            }
 
             base.Update(gameTime);
         }
@@ -74,11 +163,34 @@ namespace Pong
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.Gray);
+            // change background color accordingly with new pngs
+            GraphicsDevice.Clear(Color.White);
 
             // TODO: Add your drawing code here
+            spriteBatch.Begin();
 
+            spriteBatch.Draw(ball, new Rectangle((int) ball_position.X, (int) ball_position.Y, ball.Width, ball.Height), Color.White);
+            spriteBatch.Draw(red_player, new Rectangle(0, (int) red_position, red_player.Width, red_player.Height), Color.White);
+            spriteBatch.Draw(blue_player, new Rectangle(900 - blue_player.Width, (int) blue_position, blue_player.Width, blue_player.Height), Color.White);
+
+            spriteBatch.End();
             base.Draw(gameTime);
+        }
+
+        private void resetBall()
+        {
+            divider = rng.NextDouble();
+            ball_speed = new Vector2((float)(ball_defaultspeed * divider + ball_defaultspeed * 0.25), (float)(ball_defaultspeed * (1 - divider) + ball_defaultspeed * 0.25));
+            ball_position = new Vector2(450 - ball.Width / 2, 300 - ball.Height / 2);
+
+            if (rng.Next(0, 2) == 1)
+            {
+                ball_speed.X *= -1;
+            }
+            if (rng.Next(0, 2) == 1)
+            {
+                ball_speed.Y *= -1;
+            }
         }
     }
 }
