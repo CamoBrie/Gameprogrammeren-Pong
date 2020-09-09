@@ -6,6 +6,7 @@ namespace Pong
 {
     /// <summary>
     /// This is the main type for your game.
+    /// ganggang
     /// </summary>
     public class Pong : Game
     {
