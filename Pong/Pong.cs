@@ -111,13 +111,13 @@ namespace Pong
         protected override void Update(GameTime gameTime)
         {
             //reset ball and remove a life when ball passes paddle
-            if (ball_position.X < -100)
+            if (ball_position.X < -20)
             {
                 red_lives--;
                 resetBall();
             }
             
-            if (ball_position.X > 1000)
+            if (ball_position.X > 920)
             {
                 blue_lives--;
                 resetBall();
@@ -216,7 +216,16 @@ namespace Pong
         private void resetBall()
         {
             divider = rng.NextDouble();
-            ball_speed = new Vector2((float)(ball_defaultspeed * divider + ball_defaultspeed * 0.25), (float)(ball_defaultspeed * (1 - divider) + ball_defaultspeed * 0.25));
+
+            //makes sure the ball goes horizontal at the start instead of vertical
+            if(divider > 0.5)
+            {
+                ball_speed = new Vector2((float)(ball_defaultspeed * divider + ball_defaultspeed * 0.25), (float)(ball_defaultspeed * (1 - divider) + ball_defaultspeed * 0.25));
+            } else
+            {
+                ball_speed = new Vector2((float)(ball_defaultspeed * (1- divider) + ball_defaultspeed * 0.25), (float)(ball_defaultspeed * divider + ball_defaultspeed * 0.25));
+            }
+          
             ball_position = new Vector2(450 - ball.Width / 2, 300 - ball.Height / 2);
 
             if (rng.Next(0, 2) == 1)
