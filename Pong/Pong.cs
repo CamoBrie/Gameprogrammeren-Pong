@@ -19,6 +19,9 @@ namespace Pong
         Texture2D red_player;
         Texture2D blue_player;
 
+        //variables for the lives pixels
+        Texture2D single_pixel;
+
         //variables for the positions
         private double red_position;
         private double blue_position;
@@ -74,6 +77,10 @@ namespace Pong
             ball = Content.Load<Texture2D>("ball");
             red_player = Content.Load<Texture2D>("red_player");
             blue_player = Content.Load<Texture2D>("blue_player");
+
+            //set texturecolor
+            single_pixel = new Texture2D(GraphicsDevice, 1, 1);
+            single_pixel.SetData(new[] { Color.White });
 
             //set default variables
             red_position = 300.0 - red_player.Height/2;
@@ -153,15 +160,21 @@ namespace Pong
             }
 
             if(ball_position.X < red_player.Width && ball_position.Y > red_position && ball_position.Y < red_position + red_player.Height)
-            {
+            {   
+                //TODO: change the ball's trajectory based on where it hits the paddle
                 ball_speed.X *= -1;
+
+                //speed up the ball on bounce
                 ball_speed.X *= bounce_increase;
                 ball_speed.Y *= bounce_increase;
             }
       
             if (ball_position.X > 900 - blue_player.Width - ball.Width && ball_position.X < 900 && ball_position.Y > blue_position && ball_position.Y < blue_position + blue_player.Height)
             {
+                //TODO: change the ball's trajectory based on where it hits the paddle
                 ball_speed.X *= -1;
+
+                //speed up the ball on bounce
                 ball_speed.X *= bounce_increase;
                 ball_speed.Y *= bounce_increase;
             }
@@ -176,25 +189,24 @@ namespace Pong
         protected override void Draw(GameTime gameTime)
         {
             // change background color accordingly with new pngs
-            GraphicsDevice.Clear(Color.White);
+            GraphicsDevice.Clear(Color.Black);
 
-            // TODO: Add your drawing code here
             spriteBatch.Begin();
 
             spriteBatch.Draw(ball, new Rectangle((int) ball_position.X, (int) ball_position.Y, ball.Width, ball.Height), Color.White);
-            spriteBatch.Draw(red_player, new Rectangle(0, (int) red_position, red_player.Width, red_player.Height), Color.White);
-            spriteBatch.Draw(blue_player, new Rectangle(900 - blue_player.Width, (int) blue_position, blue_player.Width, blue_player.Height), Color.White);
+            spriteBatch.Draw(red_player, new Rectangle(0, (int) red_position, red_player.Width, red_player.Height), Color.IndianRed);
+            spriteBatch.Draw(blue_player, new Rectangle(900 - blue_player.Width, (int) blue_position, blue_player.Width, blue_player.Height), Color.CornflowerBlue);
 
             //drawing red player's lives
             for(int i = 0; i < red_lives; i++)
             {
-                spriteBatch.Draw(ball, new Rectangle(0 + ball.Width * i, 0, ball.Width, ball.Height), Color.White);
+                spriteBatch.Draw(single_pixel, new Rectangle(4, (int)red_position + 31 + i * 12, 8, 8), Color.IndianRed);
             }
 
             //drawing blue player's lives
             for (int i = 0; i < blue_lives; i++)
             {
-                spriteBatch.Draw(ball, new Rectangle(900 - ball.Width * (i + 1), 0, ball.Width, ball.Height), Color.White);
+                spriteBatch.Draw(single_pixel, new Rectangle(900 - blue_player.Width + 4, (int)blue_position + 31 + i * 12, 8, 8), Color.CornflowerBlue);
             }
 
             spriteBatch.End();
