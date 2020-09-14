@@ -11,7 +11,7 @@ namespace Pong
     /// </summary>
     public class Pong : Game
     {
-        GraphicsDeviceManager graphics;
+        readonly GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
         //variables for the game sprites
@@ -35,8 +35,11 @@ namespace Pong
         //variables for angles
         private Vector2 ball_speed;
 
+        //variables for gameStates
+        private bool player_turn;
+
         //random class
-        static Random rng = new Random();
+        readonly static Random rng = new Random();
         private double divider;
 
         //variable for player lives
@@ -88,7 +91,11 @@ namespace Pong
             red_lives = 3;
             blue_lives = 3;
             paddle_speed = 10.0;
-            bounce_increase = 1.01f;
+            bounce_increase = 1.05f;
+
+            //set gameStates
+            //true = blue | false = red
+            player_turn = true;
 
             ball_defaultspeed = 7.0;
             resetBall();
@@ -159,20 +166,32 @@ namespace Pong
                 ball_speed.Y *= -1;
             }
 
-            if(ball_position.X < red_player.Width && ball_position.Y > red_position && ball_position.Y < red_position + red_player.Height)
+            if(player_turn == false && ball_position.X < red_player.Width && ball_position.Y > red_position - ball.Height && ball_position.Y < red_position + red_player.Height)
             {   
                 //TODO: change the ball's trajectory based on where it hits the paddle
                 ball_speed.X *= -1;
+
+                double change = ((red_position + red_player.Height / 2) - (ball_position.Y + ball.Height / 2)) * 0.1;
+                ball_speed.Y += (float) -change;
+
+                //switch player turn
+                player_turn = !player_turn;
 
                 //speed up the ball on bounce
                 ball_speed.X *= bounce_increase;
                 ball_speed.Y *= bounce_increase;
             }
       
-            if (ball_position.X > 900 - blue_player.Width - ball.Width && ball_position.X < 900 && ball_position.Y > blue_position && ball_position.Y < blue_position + blue_player.Height)
+            if (player_turn == true && ball_position.X > 900 - blue_player.Width - ball.Width && ball_position.X < 900 && ball_position.Y > blue_position-ball.Height && ball_position.Y < blue_position + blue_player.Height)
             {
                 //TODO: change the ball's trajectory based on where it hits the paddle
                 ball_speed.X *= -1;
+
+                double change = ((blue_position + blue_player.Height / 2) - (ball_position.Y + ball.Height / 2)) * 0.1;
+                ball_speed.Y += (float) -change;
+
+                //switch player turn
+                player_turn = !player_turn;
 
                 //speed up the ball on bounce
                 ball_speed.X *= bounce_increase;
@@ -215,6 +234,7 @@ namespace Pong
 
         private void resetBall()
         {
+            player_turn = true;
             divider = rng.NextDouble();
 
             //makes sure the ball goes horizontal at the start instead of vertical
@@ -230,6 +250,7 @@ namespace Pong
 
             if (rng.Next(0, 2) == 1)
             {
+                player_turn = !player_turn;
                 ball_speed.X *= -1;
             }
             if (rng.Next(0, 2) == 1)
