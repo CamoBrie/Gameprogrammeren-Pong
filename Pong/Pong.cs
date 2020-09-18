@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Pong.GameClasses;
 using System;
 using System.Net.Mime;
 
@@ -11,40 +12,30 @@ namespace Pong
     /// </summary>
     public class Pong : Game
     {
+        //Monogame sprites
         readonly GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        //variables for the game sprites
-        Texture2D ball;
-        Texture2D red_player;
-        Texture2D blue_player;
+        //Object variables
+        Player redPlayer;
+        Player bluePlayer;
+        Ball ball;
 
-        //variables for the lives pixels
+        //variables for the lives rectangles
         Texture2D single_pixel;
 
-        //variables for the positions
-        private double red_position;
-        private double blue_position;
-        private Vector2 ball_position;
 
         //variables for speed
         private double paddle_speed;
         private double ball_defaultspeed;
         private float bounce_increase;
-
-        //variables for angles
-        private Vector2 ball_speed;
+        private float bounce_speed;
 
         //variables for gameStates
         private bool player_turn;
 
         //random class
         readonly static Random rng = new Random();
-        private double divider;
-
-        //variable for player lives
-        private int red_lives;
-        private int blue_lives;
 
         public Pong()
         {
@@ -77,28 +68,26 @@ namespace Pong
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            ball = Content.Load<Texture2D>("ball");
-            red_player = Content.Load<Texture2D>("red_player");
-            blue_player = Content.Load<Texture2D>("blue_player");
+            //create a new ball(starting position, starting speed, image, colortint)
+            ball = new Ball(new Vector2(450,300), new Vector2(3.0f, 3.0f), Content.Load<Texture2D>("ball"), Color.White);
+
+            redPlayer = new Player(3, Color.IndianRed, Content.Load<Texture2D>("red_player"), new Vector2(0, 300),"West");
+            bluePlayer = new Player(3, Color.CornflowerBlue, Content.Load<Texture2D>("blue_player"), new Vector2(884, 300), "East");
 
             //set texturecolor
             single_pixel = new Texture2D(GraphicsDevice, 1, 1);
             single_pixel.SetData(new[] { Color.White });
 
             //set default variables
-            red_position = 300.0 - red_player.Height/2;
-            blue_position = 300.0 - blue_player.Height / 2;
-            red_lives = 3;
-            blue_lives = 3;
             paddle_speed = 10.0;
-            bounce_increase = 1.05f;
+            bounce_increase = 1.005f;
+            bounce_speed = 1;
 
             //set gameStates
             //true = blue | false = red
             player_turn = true;
 
             ball_defaultspeed = 7.0;
-            resetBall();
         }
 
         /// <summary>
@@ -118,16 +107,18 @@ namespace Pong
         protected override void Update(GameTime gameTime)
         {
             //reset ball and remove a life when ball passes paddle
-            if (ball_position.X < -20)
+            if (ball.getPosition().X < -20)
             {
-                red_lives--;
+                redPlayer.setLives(redPlayer.getLives() - 1);
                 resetBall();
+
             }
             
-            if (ball_position.X > 920)
+            if (ball.getPosition().X > 920)
             {
-                blue_lives--;
+                bluePlayer.setLives(bluePlayer.getLives() - 1);
                 resetBall();
+
             }
 
             //Exit
@@ -137,65 +128,68 @@ namespace Pong
             }
 
             //RED PLAYER UP
-            if(Keyboard.GetState().IsKeyDown(Keys.W) && red_position > 0)
+            if(Keyboard.GetState().IsKeyDown(Keys.W) && redPlayer.getPosition().Y > 0)
             {
-                red_position -= paddle_speed;
+                redPlayer.setPosition(new Vector2(0, (float) (redPlayer.getPosition().Y - paddle_speed)));
             }
             //RED PLAYER DOWN
-            if (Keyboard.GetState().IsKeyDown(Keys.S) && red_position < 600 - red_player.Height)
+            if (Keyboard.GetState().IsKeyDown(Keys.S) && redPlayer.getPosition().Y < 600 - redPlayer.Height)
             {
-                red_position += paddle_speed;
+                redPlayer.setPosition(new Vector2(0, (float)(redPlayer.getPosition().Y + paddle_speed)));
             }
             //BLUE PLAYER UP
-            if (Keyboard.GetState().IsKeyDown(Keys.Up) && blue_position > 0)
+            if (Keyboard.GetState().IsKeyDown(Keys.Up) && bluePlayer.getPosition().Y > 0)
             {
-                blue_position -= paddle_speed;
+                bluePlayer.setPosition(new Vector2(880, (float)(bluePlayer.getPosition().Y - paddle_speed)));
             }
             //BLUE PLAYER DOWN
-            if (Keyboard.GetState().IsKeyDown(Keys.Down) && blue_position < 600 - blue_player.Height)
+            if (Keyboard.GetState().IsKeyDown(Keys.Down) && bluePlayer.getPosition().Y < 600 - bluePlayer.Height)
             {
-                blue_position += paddle_speed;
+                bluePlayer.setPosition(new Vector2(880, (float)(bluePlayer.getPosition().Y + paddle_speed)));
             }
 
             //change ball position
-            ball_position = Vector2.Add(ball_position, ball_speed);
+            ball.setPosition(Vector2.Add(ball.getPosition(), Vector2.Multiply(ball.getSpeed(), (float)ball_defaultspeed * bounce_speed)));
 
             //check boundaries of ball position
-            if(ball_position.Y >= 600 - ball.Height || ball_position.Y <= 0)
+            if(ball.getPosition().Y >= 600 - ball.Height || ball.getPosition().Y <= 0)
             {
-                ball_speed.Y *= -1;
+                ball.invertY();
             }
 
-            if(player_turn == false && ball_position.X < red_player.Width && ball_position.Y > red_position - ball.Height && ball_position.Y < red_position + red_player.Height)
-            {   
-                //TODO: change the ball's trajectory based on where it hits the paddle
-                ball_speed.X *= -1;
+            if(player_turn == false && ball.getPosition().X < redPlayer.Width && ball.getPosition().Y > redPlayer.getPosition().Y - ball.Height && ball.getPosition().Y < redPlayer.getPosition().Y + redPlayer.Height)
+            {
+                ball.invertX();
 
-                double change = ((red_position + red_player.Height / 2) - (ball_position.Y + ball.Height / 2)) * 0.1;
-                ball_speed.Y += (float) -change;
+                //double change = ((redPlayer.getPosition().Y + redPlayer.Height / 2) - (ball.getPosition().Y + ball.Height / 2));
+                //ball.setSpeed(new Vector2(0, ball.getSpeed().Y - (float) (change * 0.1)));
+
+                
 
                 //switch player turn
                 player_turn = !player_turn;
 
                 //speed up the ball on bounce
-                ball_speed.X *= bounce_increase;
-                ball_speed.Y *= bounce_increase;
+                bounce_speed *= bounce_increase;
+
+                //ball.setSpeed(new Vector2(ball.getSpeed().X * bounce_increase, ball.getSpeed().Y * bounce_increase));
+
             }
       
-            if (player_turn == true && ball_position.X > 900 - blue_player.Width - ball.Width && ball_position.X < 900 && ball_position.Y > blue_position-ball.Height && ball_position.Y < blue_position + blue_player.Height)
+            if (player_turn == true && ball.getPosition().X > 900 - bluePlayer.Width - ball.Width && ball.getPosition().X < 900 && ball.getPosition().Y > bluePlayer.getPosition().Y - ball.Height && ball.getPosition().Y < bluePlayer.getPosition().Y + bluePlayer.Height)
             {
-                //TODO: change the ball's trajectory based on where it hits the paddle
-                ball_speed.X *= -1;
+                //ball.setSpeed(new Vector2(0, ball.getSpeed().X * -1));
+                ball.invertX();
 
-                double change = ((blue_position + blue_player.Height / 2) - (ball_position.Y + ball.Height / 2)) * 0.1;
-                ball_speed.Y += (float) -change;
+                //double change = ((bluePlayer.getPosition().Y + bluePlayer.Height / 2) - (ball.getPosition().Y + ball.Height / 2));
+                //ball.setSpeed(new Vector2(0, ball.getSpeed().Y - (float)(change * 0.1)));
 
+                //ball.getSpeed().X *= (float)(-1 + 1/(Math.Abs(change)/23));
                 //switch player turn
                 player_turn = !player_turn;
 
                 //speed up the ball on bounce
-                ball_speed.X *= bounce_increase;
-                ball_speed.Y *= bounce_increase;
+                bounce_speed *= bounce_increase;
             }
 
             base.Update(gameTime);
@@ -212,20 +206,20 @@ namespace Pong
 
             spriteBatch.Begin();
 
-            spriteBatch.Draw(ball, new Rectangle((int) ball_position.X, (int) ball_position.Y, ball.Width, ball.Height), Color.White);
-            spriteBatch.Draw(red_player, new Rectangle(0, (int) red_position, red_player.Width, red_player.Height), Color.IndianRed);
-            spriteBatch.Draw(blue_player, new Rectangle(900 - blue_player.Width, (int) blue_position, blue_player.Width, blue_player.Height), Color.CornflowerBlue);
+            spriteBatch.Draw(ball.getImage(), new Rectangle((int) ball.getPosition().X, (int) ball.getPosition().Y, ball.Width, ball.Height), ball.GetColor());
+            spriteBatch.Draw(redPlayer.getImage(), new Rectangle((int) redPlayer.getPosition().X, (int) redPlayer.getPosition().Y, redPlayer.Width, redPlayer.Height), redPlayer.getColor());
+            spriteBatch.Draw(bluePlayer.getImage(), new Rectangle((int) bluePlayer.getPosition().X, (int) bluePlayer.getPosition().Y, bluePlayer.Width, bluePlayer.Height), bluePlayer.getColor());
 
             //drawing red player's lives
-            for(int i = 0; i < red_lives; i++)
+            for(int i = 0; i < redPlayer.getLives(); i++)
             {
-                spriteBatch.Draw(single_pixel, new Rectangle(4, (int)red_position + 31 + i * 12, 8, 8), Color.IndianRed);
+                spriteBatch.Draw(single_pixel, new Rectangle(4, (int) redPlayer.getPosition().Y + 31 + i * 12, 8, 8), redPlayer.getColor());
             }
 
             //drawing blue player's lives
-            for (int i = 0; i < blue_lives; i++)
+            for (int i = 0; i < bluePlayer.getLives(); i++)
             {
-                spriteBatch.Draw(single_pixel, new Rectangle(900 - blue_player.Width + 4, (int)blue_position + 31 + i * 12, 8, 8), Color.CornflowerBlue);
+                spriteBatch.Draw(single_pixel, new Rectangle(900 - bluePlayer.Width + 4, (int) bluePlayer.getPosition().Y + 31 + i * 12, 8, 8), bluePlayer.getColor());
             }
 
             spriteBatch.End();
@@ -234,29 +228,9 @@ namespace Pong
 
         private void resetBall()
         {
-            player_turn = true;
-            divider = rng.NextDouble();
-
-            //makes sure the ball goes horizontal at the start instead of vertical
-            if(divider > 0.5)
-            {
-                ball_speed = new Vector2((float)(ball_defaultspeed * divider + ball_defaultspeed * 0.25), (float)(ball_defaultspeed * (1 - divider) + ball_defaultspeed * 0.25));
-            } else
-            {
-                ball_speed = new Vector2((float)(ball_defaultspeed * (1- divider) + ball_defaultspeed * 0.25), (float)(ball_defaultspeed * divider + ball_defaultspeed * 0.25));
-            }
-          
-            ball_position = new Vector2(450 - ball.Width / 2, 300 - ball.Height / 2);
-
-            if (rng.Next(0, 2) == 1)
-            {
-                player_turn = !player_turn;
-                ball_speed.X *= -1;
-            }
-            if (rng.Next(0, 2) == 1)
-            {
-                ball_speed.Y *= -1;
-            }
+            ball.setPosition(new Vector2(450, 300));
+            ball.setSpeed(new Vector2(3.0f, 3.0f));
+            new Vector2(450, 300);
         }
     }
 }
