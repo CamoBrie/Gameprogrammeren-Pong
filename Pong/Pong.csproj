@@ -40,8 +40,12 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="GameClasses\Ball.cs" />
+    <Compile Include="GameClasses\Settings.cs" />
     <Compile Include="GameClasses\Player.cs" />
     <Compile Include="GameClasses\Lives.cs" />
     <Compile Include="Pong.cs" />

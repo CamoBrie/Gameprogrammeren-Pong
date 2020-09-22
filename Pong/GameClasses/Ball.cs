@@ -53,7 +53,7 @@ namespace Pong.GameClasses
         }
         public void setSpeed(Vector2 newSpeed)
         {
-            this.position = newSpeed;
+            this.speed = newSpeed;
         }
 
 
