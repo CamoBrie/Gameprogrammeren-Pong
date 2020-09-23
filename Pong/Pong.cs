@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Pong.GameClasses;
@@ -18,6 +19,7 @@ namespace Pong
         private SpriteFont cms;
         private SpriteFont arial;
         SpriteBatch spriteBatch;
+
 
         //Object variables
         Player redPlayer;
@@ -58,6 +60,8 @@ namespace Pong
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+            IsMouseVisible = true;
+
         }
 
         /// <summary>
@@ -84,6 +88,7 @@ namespace Pong
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
+            
 
             //create a new ball(starting position, starting speed, image, colortint)
             ball = new Ball(new Vector2(450,300), new Vector2(3.0f, 3.0f), Content.Load<Texture2D>("ball"), Color.White);
@@ -237,37 +242,67 @@ namespace Pong
         {
             // change background color accordingly with new pngs
             GraphicsDevice.Clear(Color.Black);
+
             spriteBatch.Begin();
 
+            String temp;
 
             switch (currentState)
             {
                 case gameStates.Menu:
                     //MAIN MENU
                     spriteBatch.DrawString(cms, "PONG", new Vector2(450 - CenterStringX(cms, "PONG"), 200), Color.White);
-                    spriteBatch.DrawString(arial, "Press [Space] to start", new Vector2(450 - CenterStringX(arial, "Press [Space] to start"), 340), Color.White);
-                    spriteBatch.DrawString(arial, "or press [S] to go to settings", new Vector2(450 - CenterStringX(arial, "or press [S] to go to settings"), 370), Color.White);
-                    spriteBatch.DrawString(arial, "Controls are {W,S} and {ArrowUp, ArrowDown}", new Vector2(450 - CenterStringX(arial, "Controls are {W,S} and {ArrowUp, ArrowDown}"), 400), Color.Gray);
+
+                    temp = "Press [Space] to start";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 340), Color.White);
+
+                    temp = "or press [S] to go to settings";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 370), Color.White);
+
+                    temp = "Controls are {W,S} and {ArrowUp, ArrowDown}";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 400), Color.Gray);
 
                     break;
                 case gameStates.GameOver:
-                    spriteBatch.DrawString(cms, "PONG", new Vector2(450 - CenterStringX(cms, "PONG"), 200), Color.White);
-                    spriteBatch.DrawString(arial, "Game over, " + (player_turn ? "Red" : "Blue") + " wins!", new Vector2(450 - CenterStringX(arial, "Game over, " + (player_turn ? "Red" : "Blue") + " wins!"), 340), Color.White);
-                    spriteBatch.DrawString(arial, "Press [Enter] to return to the menu", new Vector2(450 - CenterStringX(arial, "Press [Enter] to return to the menu"), 370), Color.White);
-                    spriteBatch.DrawString(arial, "or press [Space] to play again", new Vector2(450 - CenterStringX(arial, "or press [Space] to play again"), 400), Color.White);
                     //GAME OVER
+                    spriteBatch.DrawString(cms, "PONG", new Vector2(450 - CenterStringX(cms, "PONG"), 200), Color.White);
+
+
+                    temp = "Game over, " + (player_turn ? "Red" : "Blue") + " wins!";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 340), Color.White);
+
+                    temp = "Press [Enter] to return to the menu";
+                   spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 400), Color.Gray);
+
+                    temp = "or press [Space] to play again";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 430), Color.Gray);
                     break;
 
                 case gameStates.Settings:
                     //SETTINGS
-                    spriteBatch.DrawString(arial, "Settings", new Vector2(450 - CenterStringX(arial, "Settings"), 60), Color.White);
-                    spriteBatch.DrawString(arial, "______________", new Vector2(450 - CenterStringX(arial, "______________"), 100 + 40*(int)selectedSetting), Color.White);
-                    spriteBatch.DrawString(arial, "Paddle speed <" + st.paddle_speed + ">", new Vector2(450 - CenterStringX(arial, "Paddle speed <" + st.paddle_speed + ">"), 100), Color.White);
-                    spriteBatch.DrawString(arial, "Speed multiplier on bounce <" + st.bounce_increase + ">", new Vector2(450 - CenterStringX(arial, "Speed multiplier on bounce <" + st.bounce_increase + ">"), 140), Color.White);
-                    spriteBatch.DrawString(arial, "Starting speed of ball <" + st.ball_defaultspeed + ">", new Vector2(450 - CenterStringX(arial, "Starting speed of ball <" + st.ball_defaultspeed + ">"), 180), Color.White);
-                    spriteBatch.DrawString(arial, "Amount of lives <" + st.lives + ">", new Vector2(450 - CenterStringX(arial, "Amount of lives <" + st.lives + ">"), 220), Color.White);
-                    spriteBatch.DrawString(arial, "Use [Arrow keys] to change the values", new Vector2(450 - CenterStringX(arial, "Use [Arrow keys] to change the values"), 460), Color.Gray);
-                    spriteBatch.DrawString(arial, "Press [Enter] to return to the menu", new Vector2(450 - CenterStringX(arial, "Press [Enter] to return to the menu"), 500), Color.White);
+                    spriteBatch.DrawString(arial, "Settings", new Vector2(450 - CenterStringX(arial, "Settings"), 60), Color.Gray);
+
+                    //SELECTOR
+                    temp = "______________";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 100 + 40*(int)selectedSetting), Color.White);
+
+                    temp = "Paddle speed <" + st.paddle_speed + ">";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 100), Color.White);
+
+                    temp = "Speed multiplier on bounce <" + st.bounce_increase + ">";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 140), Color.White);
+
+                    temp = "Starting speed of ball <" + st.ball_defaultspeed + ">";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 180), Color.White);
+
+                    temp = "Amount of lives <" + st.lives + ">";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 220), Color.White);
+
+                    temp = "Use [Arrow keys] to change the values";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 460), Color.Gray);
+
+                    temp = "Press [Enter] to return to the menu";
+                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 500), Color.Gray);
 
                     break;
                 
@@ -317,11 +352,19 @@ namespace Pong
             {
                 player_turn = false;
                 ball.setSpeed(new Vector2((float)-rng.NextDouble() * 2, (float)rng.NextDouble() * 2 - 1));
+                if(ball.getSpeed().X < 0.2)
+                {
+                    ball.setSpeed(new Vector2(-0.2f, 0.8f));
+                }
             }
             else
             {
                 player_turn = true;
                 ball.setSpeed(new Vector2((float)rng.NextDouble() * 2, (float)rng.NextDouble() * 2 - 1));
+                if (ball.getSpeed().X < 0.2)
+                {
+                    ball.setSpeed(new Vector2(0.2f, 0.8f));
+                }
             }
             ball.setPosition(new Vector2(450-ball.Width/2, 300-ball.Height/2));
             
