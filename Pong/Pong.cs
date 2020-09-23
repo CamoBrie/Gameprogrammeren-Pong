@@ -42,7 +42,7 @@ namespace Pong
         bool hasPressedDown = false;
 
         //the actual gamestates
-        enum gameStates
+        enum GameStates
         {
             Menu,
             GameOver,
@@ -50,7 +50,7 @@ namespace Pong
             Settings
         }
 
-        gameStates currentState;
+        GameStates currentState;
         allSettings selectedSetting;
 
         //random class
@@ -111,9 +111,9 @@ namespace Pong
             player_turn = true;
             has_moved = false;
 
-            currentState = gameStates.Menu;
+            currentState = GameStates.Menu;
             selectedSetting = 0;
-            resetBall();
+            ResetBall();
         }
 
         /// <summary>
@@ -140,30 +140,30 @@ namespace Pong
 
             switch(currentState)
             {
-                case gameStates.Menu:
+                case GameStates.Menu:
                     if (Keyboard.GetState().IsKeyDown(Keys.Space))
                     {
-                        currentState = gameStates.Game;
+                        currentState = GameStates.Game;
                     }
                     if (Keyboard.GetState().IsKeyDown(Keys.S))
                     {
-                        currentState = gameStates.Settings;
+                        currentState = GameStates.Settings;
                     }
                     break;
-                case gameStates.GameOver:
+                case GameStates.GameOver:
                     running = false;
                     if (Keyboard.GetState().IsKeyDown(Keys.Enter))
                     {
-                        currentState = gameStates.Menu;
+                        currentState = GameStates.Menu;
                     }
                     if (Keyboard.GetState().IsKeyDown(Keys.Space))
                     {
-                        currentState = gameStates.Game;
-                        resetBall();
+                        currentState = GameStates.Game;
+                        ResetBall();
                     }
                     //GAME OVER
                     break;
-                case gameStates.Game:
+                case GameStates.Game:
                     //GAME IS RUNNING
                     if(!running)
                     {
@@ -171,12 +171,12 @@ namespace Pong
                         bluePlayer.setLives(st.lives);
                         redPlayer.setLives(st.lives);
                     }
-                    runGame();
+                    RunGame();
                     break;
-                case gameStates.Settings:
+                case GameStates.Settings:
                     if (Keyboard.GetState().IsKeyDown(Keys.Enter))
                     {
-                        currentState = gameStates.Menu;
+                        currentState = GameStates.Menu;
                     }
 
                     if (Keyboard.GetState().IsKeyDown(Keys.Left) && !hasPressedLeft)
@@ -245,68 +245,50 @@ namespace Pong
 
             spriteBatch.Begin();
 
-            String temp;
-
             switch (currentState)
             {
-                case gameStates.Menu:
+                case GameStates.Menu:
                     //MAIN MENU
-                    spriteBatch.DrawString(cms, "PONG", new Vector2(450 - CenterStringX(cms, "PONG"), 200), Color.White);
+                    DrawCenteredString(cms, "PONG", new Vector2(450, 200), Color.White);
 
-                    temp = "Press [Space] to start";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 340), Color.White);
-
-                    temp = "or press [S] to go to settings";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 370), Color.White);
-
-                    temp = "Controls are {W,S} and {ArrowUp, ArrowDown}";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 400), Color.Gray);
+                    //Main menu text
+                    DrawCenteredString(arial, "Press [Space] to start", new Vector2(450,340),Color.White);
+                    DrawCenteredString(arial, "or press [S] to go to settings", new Vector2(450, 370), Color.White);
+                    DrawCenteredString(arial, "Controls are {W,S} and {ArrowUp, ArrowDown} for the players", new Vector2(450,400), Color.Gray);
 
                     break;
-                case gameStates.GameOver:
+                case GameStates.GameOver:
                     //GAME OVER
-                    spriteBatch.DrawString(cms, "PONG", new Vector2(450 - CenterStringX(cms, "PONG"), 200), Color.White);
+                    DrawCenteredString(cms, "PONG", new Vector2(450,200), Color.White);
 
+                    //resulting text
+                    DrawCenteredString(arial, "Game over, " + (player_turn ? "Red" : "Blue") + " wins!", new Vector2(450,340), Color.White);
 
-                    temp = "Game over, " + (player_turn ? "Red" : "Blue") + " wins!";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 340), Color.White);
-
-                    temp = "Press [Enter] to return to the menu";
-                   spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 400), Color.Gray);
-
-                    temp = "or press [Space] to play again";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 430), Color.Gray);
+                    //Help text
+                    DrawCenteredString(arial, "Press [Enter] to return to the menu", new Vector2(450, 400), Color.Gray);
+                    DrawCenteredString(arial, "or press [Space] to play again", new Vector2(450, 430), Color.Gray);
                     break;
 
-                case gameStates.Settings:
+                case GameStates.Settings:
                     //SETTINGS
-                    spriteBatch.DrawString(arial, "Settings", new Vector2(450 - CenterStringX(arial, "Settings"), 60), Color.Gray);
+                    DrawCenteredString(arial, "Settings", new Vector2(450, 60), Color.Gray);
 
                     //SELECTOR
-                    temp = "______________";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 100 + 40*(int)selectedSetting), Color.White);
+                    DrawCenteredString(arial, "______________", new Vector2(450, 100 + 40 * (int)selectedSetting), Color.Gray);
 
-                    temp = "Paddle speed <" + st.paddle_speed + ">";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 100), Color.White);
+                    //The settings
+                    DrawCenteredString(arial, "Paddle speed <" + st.paddle_speed + ">", new Vector2(450, 100), Color.White);
+                    DrawCenteredString(arial, "Speed multiplier on bounce <" + st.bounce_increase + ">", new Vector2(450, 140), Color.White);
+                    DrawCenteredString(arial, "Starting speed of ball <" + st.ball_defaultspeed + ">", new Vector2(450, 180), Color.White);
+                    DrawCenteredString(arial, "Amount of lives <" + st.lives + ">", new Vector2(450, 220), Color.White);
 
-                    temp = "Speed multiplier on bounce <" + st.bounce_increase + ">";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 140), Color.White);
-
-                    temp = "Starting speed of ball <" + st.ball_defaultspeed + ">";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 180), Color.White);
-
-                    temp = "Amount of lives <" + st.lives + ">";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 220), Color.White);
-
-                    temp = "Use [Arrow keys] to change the values";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 460), Color.Gray);
-
-                    temp = "Press [Enter] to return to the menu";
-                    spriteBatch.DrawString(arial, temp, new Vector2(450 - CenterStringX(arial, temp), 500), Color.Gray);
+                    //Help text
+                    DrawCenteredString(arial, "Use [Arrow keys] to change the values", new Vector2(450, 460), Color.Gray);
+                    DrawCenteredString(arial, "Press [Enter] to return to the menu", new Vector2(450, 500), Color.Gray);
 
                     break;
                 
-                case gameStates.Game:
+                case GameStates.Game:
                     //GAME IS RUNNING
                     //draw middle_line
                     spriteBatch.Draw(single_pixel, new Rectangle(450, 0, 1, 600), Color.DarkGray);
@@ -344,7 +326,7 @@ namespace Pong
             base.Draw(gameTime);
         }
 
-        private void resetBall(bool isRed = false)
+        private void ResetBall(bool isRed = false)
         {
             has_moved = false;
             st.bounce_speed = 1;
@@ -370,21 +352,26 @@ namespace Pong
             
         }
 
-        private float CenterStringX(SpriteFont font, String text)
+        private Vector2 CenterString(SpriteFont font, String text)
         {
-            return (float) (font.MeasureString(text).X / 2);
+            return new Vector2((font.MeasureString(text).X / 2), (font.MeasureString(text).Y / 2));
         }
 
-        private void runGame()
+        private void DrawCenteredString(SpriteFont font, String text, Vector2 position, Color color)
+        {
+            spriteBatch.DrawString(font, text, Vector2.Subtract(position, CenterString(font, text)), color);
+        }
+
+        private void RunGame()
         {
             //reset ball and remove a life when ball passes paddle
             if (ball.getPosition().X < -20)
             {
                 redPlayer.setLives(redPlayer.getLives() - 1);
-                resetBall(true);
+                ResetBall(true);
                 if(redPlayer.getLives() < 1)
                 {
-                    currentState = gameStates.GameOver;
+                    currentState = GameStates.GameOver;
                     redPlayer.setLives(3);
                     bluePlayer.setLives(3);
                 }
@@ -393,10 +380,10 @@ namespace Pong
             if (ball.getPosition().X > 920)
             {
                 bluePlayer.setLives(bluePlayer.getLives() - 1);
-                resetBall(false);
+                ResetBall(false);
                 if (bluePlayer.getLives() < 1)
                 {
-                    currentState = gameStates.GameOver;
+                    currentState = GameStates.GameOver;
                     redPlayer.setLives(3);
                     bluePlayer.setLives(3);
                 }
