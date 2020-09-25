@@ -301,13 +301,25 @@ namespace Pong
                     //drawing red player's lives
                     for (int i = 0; i < redPlayer.GetLives(); i++)
                     {
-                        spriteBatch.Draw(single_pixel, new Rectangle(4, (int)redPlayer.GetPosition().Y + 31 + i * 12, 8, 8), redPlayer.GetColor());
+                        if (i < 3)
+                        {
+                            spriteBatch.Draw(single_pixel, new Rectangle(4, (int)redPlayer.GetPosition().Y + 31 + i * 12, 8, 8), redPlayer.GetColor());
+                        } else
+                        {
+                            spriteBatch.Draw(single_pixel, new Rectangle(20 + i * 12, 4, 8, 8), redPlayer.GetColor());
+                        }
                     }
 
                     //drawing blue player's lives
                     for (int i = 0; i < bluePlayer.GetLives(); i++)
                     {
-                        spriteBatch.Draw(single_pixel, new Rectangle((int)900 - bluePlayer.Width + 4, (int)bluePlayer.GetPosition().Y + 31 + i * 12, 8, 8), bluePlayer.GetColor());
+                        if (i < 3)
+                        {
+                            spriteBatch.Draw(single_pixel, new Rectangle((int)900 - bluePlayer.Width + 4, (int)bluePlayer.GetPosition().Y + 31 + i * 12, 8, 8), bluePlayer.GetColor());
+                        } else
+                        {
+                            spriteBatch.Draw(single_pixel, new Rectangle(868 - i * 12, 4, 8, 8), bluePlayer.GetColor());
+                        }
                     }
 
                     if (!has_moved)
