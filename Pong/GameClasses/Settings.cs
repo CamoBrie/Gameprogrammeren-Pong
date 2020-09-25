@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Pong.GameClasses
 {
 
-    enum allSettings
+    enum AllSettings
     {
         paddle_speed,
         bounce_increase,
@@ -33,11 +33,11 @@ namespace Pong.GameClasses
             this.lives = lives;
         }
 
-        public void changeSetting(bool increase = true, allSettings currentSetting = 0)
+        public void ChangeSetting(bool increase = true, AllSettings currentSetting = 0)
         {
             switch (currentSetting)
             {
-                case allSettings.paddle_speed: //paddle_speed
+                case AllSettings.paddle_speed: //paddle_speed
                     if(increase)
                     {
                         if(!(this.paddle_speed>49))
@@ -54,7 +54,7 @@ namespace Pong.GameClasses
                     }
                     
                     break;
-                case allSettings.bounce_increase: //bounce_increase
+                case AllSettings.bounce_increase: //bounce_increase
                     if (increase)
                     {
                         if (!(this.bounce_increase > 1.45f)) 
@@ -72,7 +72,7 @@ namespace Pong.GameClasses
                     }
                     break;
 
-                case allSettings.ball_defaultspeed: //ball_defaultspeed
+                case AllSettings.ball_defaultspeed: //ball_defaultspeed
                     if (increase)
                     {
                         if (!(this.ball_defaultspeed > 19)) {
@@ -85,7 +85,7 @@ namespace Pong.GameClasses
                         this.ball_defaultspeed--;
                     }
                     break;
-                case allSettings.lives: //lives
+                case AllSettings.lives: //lives
                     if (increase)
                     {
                         if (!(this.lives > 9))

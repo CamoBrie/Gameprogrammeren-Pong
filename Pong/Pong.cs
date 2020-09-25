@@ -51,7 +51,7 @@ namespace Pong
         }
 
         GameStates currentState;
-        allSettings selectedSetting;
+        AllSettings selectedSetting;
 
         //random class
         readonly static Random rng = new Random();
@@ -168,8 +168,8 @@ namespace Pong
                     if(!running)
                     {
                         running = true;
-                        bluePlayer.setLives(st.lives);
-                        redPlayer.setLives(st.lives);
+                        bluePlayer.SetLives(st.lives);
+                        redPlayer.SetLives(st.lives);
                     }
                     RunGame();
                     break;
@@ -182,12 +182,12 @@ namespace Pong
                     if (Keyboard.GetState().IsKeyDown(Keys.Left) && !hasPressedLeft)
                     {
                         hasPressedLeft = true;
-                        st.changeSetting(false, selectedSetting);
+                        st.ChangeSetting(false, selectedSetting);
                     }
                     if (Keyboard.GetState().IsKeyDown(Keys.Right) && !hasPressedRight)
                     {
                         hasPressedRight = true;
-                        st.changeSetting(true, selectedSetting);
+                        st.ChangeSetting(true, selectedSetting);
                     }
                     if (Keyboard.GetState().IsKeyDown(Keys.Up) && !hasPressedUp)
                     {
@@ -201,7 +201,7 @@ namespace Pong
                     if (Keyboard.GetState().IsKeyDown(Keys.Down) && !hasPressedDown)
                     {
                         hasPressedDown = true;
-                        if ((int) selectedSetting < (int) Enum.GetValues(typeof(allSettings)).Length-1)
+                        if ((int) selectedSetting < (int) Enum.GetValues(typeof(AllSettings)).Length-1)
                         {
                             selectedSetting++;
                         }
@@ -294,28 +294,28 @@ namespace Pong
                     spriteBatch.Draw(single_pixel, new Rectangle(450, 0, 1, 600), Color.DarkGray);
 
                     //draw ball and players
-                    spriteBatch.Draw(ball.getImage(), new Rectangle((int)ball.getPosition().X, (int)ball.getPosition().Y, ball.Width, ball.Height), ball.GetColor());
-                    spriteBatch.Draw(redPlayer.getImage(), new Rectangle((int)redPlayer.getPosition().X, (int)redPlayer.getPosition().Y, redPlayer.Width, redPlayer.Height), redPlayer.getColor());
-                    spriteBatch.Draw(bluePlayer.getImage(), new Rectangle((int)bluePlayer.getPosition().X, (int)bluePlayer.getPosition().Y, bluePlayer.Width, bluePlayer.Height), bluePlayer.getColor());
+                    spriteBatch.Draw(ball.GetImage(), new Rectangle((int)ball.GetPosition().X, (int)ball.GetPosition().Y, ball.Width, ball.Height), ball.GetColor());
+                    spriteBatch.Draw(redPlayer.GetImage(), new Rectangle((int)redPlayer.GetPosition().X, (int)redPlayer.GetPosition().Y, redPlayer.Width, redPlayer.Height), redPlayer.GetColor());
+                    spriteBatch.Draw(bluePlayer.GetImage(), new Rectangle((int)bluePlayer.GetPosition().X, (int)bluePlayer.GetPosition().Y, bluePlayer.Width, bluePlayer.Height), bluePlayer.GetColor());
 
                     //drawing red player's lives
-                    for (int i = 0; i < redPlayer.getLives(); i++)
+                    for (int i = 0; i < redPlayer.GetLives(); i++)
                     {
-                        spriteBatch.Draw(single_pixel, new Rectangle(4, (int)redPlayer.getPosition().Y + 31 + i * 12, 8, 8), redPlayer.getColor());
+                        spriteBatch.Draw(single_pixel, new Rectangle(4, (int)redPlayer.GetPosition().Y + 31 + i * 12, 8, 8), redPlayer.GetColor());
                     }
 
                     //drawing blue player's lives
-                    for (int i = 0; i < bluePlayer.getLives(); i++)
+                    for (int i = 0; i < bluePlayer.GetLives(); i++)
                     {
-                        spriteBatch.Draw(single_pixel, new Rectangle((int)900 - bluePlayer.Width + 4, (int)bluePlayer.getPosition().Y + 31 + i * 12, 8, 8), bluePlayer.getColor());
+                        spriteBatch.Draw(single_pixel, new Rectangle((int)900 - bluePlayer.Width + 4, (int)bluePlayer.GetPosition().Y + 31 + i * 12, 8, 8), bluePlayer.GetColor());
                     }
 
                     if (!has_moved)
                     {
                         for (int i = 1; i <= 5; i++)
                         {
-                            Vector2 nextpos = Vector2.Add(ball.getPosition(), Vector2.Multiply(ball.getSpeed(), (float)st.ball_defaultspeed * st.bounce_speed * i * 5));
-                            spriteBatch.Draw(ball.getImage(), new Rectangle((int)nextpos.X + ball.Width / 2, (int)nextpos.Y + ball.Height / 2, ball.Width / 3, ball.Height / 3), ball.GetColor());
+                            Vector2 nextpos = Vector2.Add(ball.GetPosition(), Vector2.Multiply(ball.GetSpeed(), (float)st.ball_defaultspeed * st.bounce_speed * i * 5));
+                            spriteBatch.Draw(ball.GetImage(), new Rectangle((int)nextpos.X + ball.Width / 2, (int)nextpos.Y + ball.Height / 2, ball.Width / 3, ball.Height / 3), ball.GetColor());
                         }
                     }
                     break;
@@ -333,22 +333,22 @@ namespace Pong
             if (isRed)
             {
                 player_turn = false;
-                ball.setSpeed(new Vector2((float)-rng.NextDouble() * 2, (float)rng.NextDouble() * 2 - 1));
-                if(ball.getSpeed().X < 0.2)
+                ball.SetSpeed(new Vector2((float)-rng.NextDouble() * 2, (float)rng.NextDouble() * 2 - 1));
+                if(ball.GetSpeed().X < 0.2)
                 {
-                    ball.setSpeed(new Vector2(-0.2f, 0.8f));
+                    ball.SetSpeed(new Vector2(-0.2f, 0.8f));
                 }
             }
             else
             {
                 player_turn = true;
-                ball.setSpeed(new Vector2((float)rng.NextDouble() * 2, (float)rng.NextDouble() * 2 - 1));
-                if (ball.getSpeed().X < 0.2)
+                ball.SetSpeed(new Vector2((float)rng.NextDouble() * 2, (float)rng.NextDouble() * 2 - 1));
+                if (ball.GetSpeed().X < 0.2)
                 {
-                    ball.setSpeed(new Vector2(0.2f, 0.8f));
+                    ball.SetSpeed(new Vector2(0.2f, 0.8f));
                 }
             }
-            ball.setPosition(new Vector2(450-ball.Width/2, 300-ball.Height/2));
+            ball.SetPosition(new Vector2(450-ball.Width/2, 300-ball.Height/2));
             
         }
 
@@ -365,75 +365,75 @@ namespace Pong
         private void RunGame()
         {
             //reset ball and remove a life when ball passes paddle
-            if (ball.getPosition().X < -20)
+            if (ball.GetPosition().X < -20)
             {
-                redPlayer.setLives(redPlayer.getLives() - 1);
+                redPlayer.SetLives(redPlayer.GetLives() - 1);
                 ResetBall(true);
-                if(redPlayer.getLives() < 1)
+                if(redPlayer.GetLives() < 1)
                 {
                     currentState = GameStates.GameOver;
-                    redPlayer.setLives(3);
-                    bluePlayer.setLives(3);
+                    redPlayer.SetLives(3);
+                    bluePlayer.SetLives(3);
                 }
             }
 
-            if (ball.getPosition().X > 920)
+            if (ball.GetPosition().X > 920)
             {
-                bluePlayer.setLives(bluePlayer.getLives() - 1);
+                bluePlayer.SetLives(bluePlayer.GetLives() - 1);
                 ResetBall(false);
-                if (bluePlayer.getLives() < 1)
+                if (bluePlayer.GetLives() < 1)
                 {
                     currentState = GameStates.GameOver;
-                    redPlayer.setLives(3);
-                    bluePlayer.setLives(3);
+                    redPlayer.SetLives(3);
+                    bluePlayer.SetLives(3);
                 }
             }
 
 
             //RED PLAYER UP
-            if (Keyboard.GetState().IsKeyDown(Keys.W) && redPlayer.getPosition().Y > 0)
+            if (Keyboard.GetState().IsKeyDown(Keys.W) && redPlayer.GetPosition().Y > 0)
             {
-                redPlayer.setPosition(new Vector2(0, (float)(redPlayer.getPosition().Y - st.paddle_speed)));
+                redPlayer.SetPosition(new Vector2(0, (float)(redPlayer.GetPosition().Y - st.paddle_speed)));
                 has_moved = true;
             }
             //RED PLAYER DOWN
-            if (Keyboard.GetState().IsKeyDown(Keys.S) && redPlayer.getPosition().Y < 600 - redPlayer.Height)
+            if (Keyboard.GetState().IsKeyDown(Keys.S) && redPlayer.GetPosition().Y < 600 - redPlayer.Height)
             {
-                redPlayer.setPosition(new Vector2(0, (float)(redPlayer.getPosition().Y + st.paddle_speed)));
+                redPlayer.SetPosition(new Vector2(0, (float)(redPlayer.GetPosition().Y + st.paddle_speed)));
                 has_moved = true;
             }
             //BLUE PLAYER UP
-            if (Keyboard.GetState().IsKeyDown(Keys.Up) && bluePlayer.getPosition().Y > 0)
+            if (Keyboard.GetState().IsKeyDown(Keys.Up) && bluePlayer.GetPosition().Y > 0)
             {
-                bluePlayer.setPosition(new Vector2(900 - bluePlayer.Width, (float)(bluePlayer.getPosition().Y - st.paddle_speed)));
+                bluePlayer.SetPosition(new Vector2(900 - bluePlayer.Width, (float)(bluePlayer.GetPosition().Y - st.paddle_speed)));
                 has_moved = true;
             }
             //BLUE PLAYER DOWN
-            if (Keyboard.GetState().IsKeyDown(Keys.Down) && bluePlayer.getPosition().Y < 600 - bluePlayer.Height)
+            if (Keyboard.GetState().IsKeyDown(Keys.Down) && bluePlayer.GetPosition().Y < 600 - bluePlayer.Height)
             {
-                bluePlayer.setPosition(new Vector2(900 - bluePlayer.Width, (float)(bluePlayer.getPosition().Y + st.paddle_speed)));
+                bluePlayer.SetPosition(new Vector2(900 - bluePlayer.Width, (float)(bluePlayer.GetPosition().Y + st.paddle_speed)));
                 has_moved = true;
             }
 
             //change ball position
             if (has_moved)
             {
-                ball.setPosition(Vector2.Add(ball.getPosition(), Vector2.Multiply(ball.getSpeed(), (float)st.ball_defaultspeed * st.bounce_speed)));
+                ball.SetPosition(Vector2.Add(ball.GetPosition(), Vector2.Multiply(ball.GetSpeed(), (float)st.ball_defaultspeed * st.bounce_speed)));
             }
 
             //check boundaries of ball position
-            if (ball.getPosition().Y >= 600 - ball.Height || ball.getPosition().Y <= 0)
+            if (ball.GetPosition().Y >= 600 - ball.Height || ball.GetPosition().Y <= 0)
             {
-                ball.invertY();
+                ball.InvertY();
             }
 
-            if (player_turn == false && ball.getPosition().X < redPlayer.Width && ball.getPosition().Y > redPlayer.getPosition().Y - ball.Height && ball.getPosition().Y < redPlayer.getPosition().Y + redPlayer.Height)
+            if (player_turn == false && ball.GetPosition().X < redPlayer.Width && ball.GetPosition().Y > redPlayer.GetPosition().Y - ball.Height && ball.GetPosition().Y < redPlayer.GetPosition().Y + redPlayer.Height)
             {
-                double DistanceToMiddle = (redPlayer.getPosition().Y + redPlayer.Height / 2) - (ball.getPosition().Y + ball.Height / 2);
+                double DistanceToMiddle = (redPlayer.GetPosition().Y + redPlayer.Height / 2) - (ball.GetPosition().Y + ball.Height / 2);
                 double normalizedDistance = DistanceToMiddle / (redPlayer.Height / 2);
 
 
-                ball.setSpeed(new Vector2((float)Math.Cos(normalizedDistance), (float)-Math.Sin(normalizedDistance)));
+                ball.SetSpeed(new Vector2((float)Math.Cos(normalizedDistance), (float)-Math.Sin(normalizedDistance)));
 
 
                 //switch player turn
@@ -446,14 +446,14 @@ namespace Pong
 
             }
 
-            if (player_turn == true && ball.getPosition().X > 900 - bluePlayer.Width - ball.Width && ball.getPosition().X < 900 && ball.getPosition().Y > bluePlayer.getPosition().Y - ball.Height && ball.getPosition().Y < bluePlayer.getPosition().Y + bluePlayer.Height)
+            if (player_turn == true && ball.GetPosition().X > 900 - bluePlayer.Width - ball.Width && ball.GetPosition().X < 900 && ball.GetPosition().Y > bluePlayer.GetPosition().Y - ball.Height && ball.GetPosition().Y < bluePlayer.GetPosition().Y + bluePlayer.Height)
             {
 
-                double DistanceToMiddle = (bluePlayer.getPosition().Y + bluePlayer.Height / 2) - (ball.getPosition().Y + ball.Height / 2);
+                double DistanceToMiddle = (bluePlayer.GetPosition().Y + bluePlayer.Height / 2) - (ball.GetPosition().Y + ball.Height / 2);
                 double normalizedDistance = DistanceToMiddle / (bluePlayer.Height / 2);
 
 
-                ball.setSpeed(new Vector2((float)-Math.Cos(normalizedDistance), (float)-Math.Sin(normalizedDistance)));
+                ball.SetSpeed(new Vector2((float)-Math.Cos(normalizedDistance), (float)-Math.Sin(normalizedDistance)));
 
                 //switch player turn
                 player_turn = !player_turn;

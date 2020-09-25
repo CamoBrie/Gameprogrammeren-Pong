@@ -12,7 +12,7 @@ namespace Pong.GameClasses
     {
         private Vector2 position;
         private Vector2 speed;
-        private Texture2D image;
+        private readonly Texture2D image;
         private Color color;
 
         public int Width;
@@ -36,38 +36,38 @@ namespace Pong.GameClasses
             this.Height = this.image.Height;
         }
 
-        public void invertY()
+        public void InvertY()
         {
             this.speed.Y = -this.speed.Y;
         }
 
-        public void invertX()
+        public void InvertX()
         {
             this.speed.X = -this.speed.X;
         }
 
         //SETTERS
-        public void setPosition(Vector2 newPosition)
+        public void SetPosition(Vector2 newPosition)
         {
             this.position = newPosition;
         }
-        public void setSpeed(Vector2 newSpeed)
+        public void SetSpeed(Vector2 newSpeed)
         {
             this.speed = newSpeed;
         }
 
 
         //GETTERS
-        public Vector2 getPosition()
+        public Vector2 GetPosition()
         {
             return this.position;
         }
 
-        public Vector2 getSpeed() {
+        public Vector2 GetSpeed() {
             this.speed.Normalize();
             return this.speed;
         }
-        public Texture2D getImage()
+        public Texture2D GetImage()
         {
             return this.image;
         }

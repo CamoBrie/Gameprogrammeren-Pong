@@ -15,12 +15,12 @@ namespace Pong.GameClasses
             this.lives = lives;
         }
 
-        public int getLives()
+        public int GetLives()
         {
             return this.lives;
         }
 
-        public void setLives(int lives)
+        public void SetLives(int lives)
         {
             this.lives = lives;
         }
