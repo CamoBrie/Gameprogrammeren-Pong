@@ -36,10 +36,6 @@ namespace Pong
         static Random rng = new Random();
         private double divider;
 
-        //variable for player lives
-        private int red_lives;
-        private int blue_lives;
-
         public Pong()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -78,8 +74,6 @@ namespace Pong
             //set default variables
             red_position = 300.0 - red_player.Height/2;
             blue_position = 300.0 - blue_player.Height / 2;
-            red_lives = 3;
-            blue_lives = 3;
             paddle_speed = 10.0;
             bounce_increase = 1.01f;
 
@@ -103,18 +97,12 @@ namespace Pong
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            //reset ball and remove a life when ball passes paddle
-            if (ball_position.X < -100)
+            //reset ball
+            if (ball_position.X < -100 || ball_position.X > 1000)
             {
-                red_lives--;
                 resetBall();
             }
-            
-            if (ball_position.X > 1000)
-            {
-                blue_lives--;
-                resetBall();
-            }
+
 
             //Exit
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -185,21 +173,10 @@ namespace Pong
             spriteBatch.Draw(red_player, new Rectangle(0, (int) red_position, red_player.Width, red_player.Height), Color.White);
             spriteBatch.Draw(blue_player, new Rectangle(900 - blue_player.Width, (int) blue_position, blue_player.Width, blue_player.Height), Color.White);
 
-            //drawing red player's lives
-            for(int i = 0; i < red_lives; i++)
-            {
-                spriteBatch.Draw(ball, new Rectangle(0 + ball.Width * i, 0, ball.Width, ball.Height), Color.White);
-            }
-
-            //drawing blue player's lives
-            for (int i = 0; i < blue_lives; i++)
-            {
-                spriteBatch.Draw(ball, new Rectangle(900 - ball.Width * (i + 1), 0, ball.Width, ball.Height), Color.White);
-            }
-            // ya
             spriteBatch.End();
             base.Draw(gameTime);
         }
+
         private void resetBall()
         {
             divider = rng.NextDouble();
