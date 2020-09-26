@@ -1,8 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Pong.GameClasses;
 using System;
 using System.Net.Mime;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace Pong
 {
@@ -11,37 +14,50 @@ namespace Pong
     /// </summary>
     public class Pong : Game
     {
-        GraphicsDeviceManager graphics;
+        //Monogame sprites
+        readonly GraphicsDeviceManager graphics;
+        private SpriteFont cms;
+        private SpriteFont arial;
         SpriteBatch spriteBatch;
 
-        //variables for the game sprites
-        Texture2D ball;
-        Texture2D red_player;
-        Texture2D blue_player;
 
-        //variables for the positions
-        private double red_position;
-        private double blue_position;
-        private Vector2 ball_position;
+        //Object variables
+        Player redPlayer;
+        Player bluePlayer;
+        Ball ball;
+        Settings st;
 
-        //variables for speed
-        private double paddle_speed;
-        private double ball_defaultspeed;
-        private float bounce_increase;
+        //variables for the lives rectangles, this is just stretching a single pixel to be our rectangle
+        Texture2D single_pixel;
 
-        //variables for angles
-        private Vector2 ball_speed;
+        //variables for gameStates
+        private bool player_turn;
+        private bool has_moved;
+        private bool running;
+
+        //the actual gamestates
+        enum GameStates
+        {
+            Menu,
+            GameOver,
+            Game,
+            Settings
+        }
+
+        GameStates currentState;
+        AllSettings selectedSetting;
+        KeyboardState previousState;
 
         //random class
-        static Random rng = new Random();
-        private double divider;
+        readonly static Random rng = new Random();
 
         public Pong()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-        }
+            IsMouseVisible = true;
 
+        }
         /// <summary>
         /// Allows the game to perform any initialization it needs to before starting to run.
         /// This is where it can query for any required services and load any non-graphic
@@ -66,19 +82,35 @@ namespace Pong
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
+            
 
-            ball = Content.Load<Texture2D>("ball");
-            red_player = Content.Load<Texture2D>("red_player");
-            blue_player = Content.Load<Texture2D>("blue_player");
+            //create a new ball(starting position, starting speed, image, colortint)
+            ball = new Ball(new Vector2(450,300), new Vector2(3.0f, 3.0f), Content.Load<Texture2D>("ball"), Color.White);
 
-            //set default variables
-            red_position = 300.0 - red_player.Height/2;
-            blue_position = 300.0 - blue_player.Height / 2;
-            paddle_speed = 10.0;
-            bounce_increase = 1.01f;
+            redPlayer = new Player(3, Color.IndianRed, Content.Load<Texture2D>("red_player"), new Vector2(0, 300),"West");
+            bluePlayer = new Player(3, Color.CornflowerBlue, Content.Load<Texture2D>("blue_player"), new Vector2(884, 300), "East");
 
-            ball_defaultspeed = 7.0;
-            resetBall();
+            //create a new settings object
+            st = new Settings();
+
+            //create spritefont
+            cms = Content.Load<SpriteFont>("ComicSans");
+            arial = Content.Load<SpriteFont>("Menu");
+            
+            //set texturecolor
+            single_pixel = new Texture2D(GraphicsDevice, 1, 1);
+            single_pixel.SetData(new[] { Color.White });
+
+            //set gameStates
+            //true = blue | false = red
+            player_turn = true;
+            has_moved = false;
+
+            currentState = GameStates.Menu;
+            selectedSetting = 0;
+
+            //initialize the ball's position and speed
+            ResetBall();
         }
 
         /// <summary>
@@ -97,62 +129,86 @@ namespace Pong
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            //reset ball
-            if (ball_position.X < -100 || ball_position.X > 1000)
-            {
-                resetBall();
-            }
 
+            //set current keyboard state
+            KeyboardState state = Keyboard.GetState();
 
             //Exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || state.IsKeyDown(Keys.Escape))
             {
                 Exit();
             }
 
-            //RED PLAYER UP
-            if(Keyboard.GetState().IsKeyDown(Keys.W) && red_position > 0)
+            //change what happens based on the current gamestate
+            switch(currentState)
             {
-                red_position -= paddle_speed;
-            }
-            //RED PLAYER DOWN
-            if (Keyboard.GetState().IsKeyDown(Keys.S) && red_position < 600 - red_player.Height)
-            {
-                red_position += paddle_speed;
-            }
-            //BLUE PLAYER UP
-            if (Keyboard.GetState().IsKeyDown(Keys.Up) && blue_position > 0)
-            {
-                blue_position -= paddle_speed;
-            }
-            //BLUE PLAYER DOWN
-            if (Keyboard.GetState().IsKeyDown(Keys.Down) && blue_position < 600 - blue_player.Height)
-            {
-                blue_position += paddle_speed;
+                case GameStates.Menu:
+                    //MAIN MENU
+                    if (state.IsKeyDown(Keys.Space))
+                    {
+                        currentState = GameStates.Game;
+                    }
+                    if (state.IsKeyDown(Keys.S))
+                    {
+                        currentState = GameStates.Settings;
+                    }
+                    break;
+                case GameStates.GameOver:
+                    //GAME OVER
+                    running = false;
+                    if (state.IsKeyDown(Keys.Enter))
+                    {
+                        currentState = GameStates.Menu;
+                    }
+                    if (state.IsKeyDown(Keys.Space))
+                    {
+                        currentState = GameStates.Game;
+                        ResetBall();
+                    }
+                    break;
+                case GameStates.Game:
+                    //GAME IS RUNNING
+                    if(!running)
+                    {
+                        running = true;
+                        bluePlayer.SetLives(st.lives);
+                        redPlayer.SetLives(st.lives);
+                    }
+                    RunGame();
+                    break;
+                case GameStates.Settings:
+                    if (state.IsKeyDown(Keys.Enter))
+                    {
+                        currentState = GameStates.Menu;
+                    }
+
+                    if (state.IsKeyDown(Keys.Left) && !previousState.IsKeyDown(Keys.Left))
+                    {
+                        st.ChangeSetting(false, selectedSetting);
+                    }
+                    if (state.IsKeyDown(Keys.Right) && !previousState.IsKeyDown(Keys.Right))
+                    {
+                        st.ChangeSetting(true, selectedSetting);
+                    }
+                    if (state.IsKeyDown(Keys.Up) && !previousState.IsKeyDown(Keys.Up))
+                    {
+                        if (selectedSetting > 0)
+                        {
+                            selectedSetting--;
+                        }
+                    }
+                    if (state.IsKeyDown(Keys.Down) && !previousState.IsKeyDown(Keys.Down))
+                    {
+                        if ((int) selectedSetting < Enum.GetValues(typeof(AllSettings)).Length-1)
+                        {
+                            selectedSetting++;
+                        }
+                    }
+                    break;
             }
 
-            //change ball position
-            ball_position = Vector2.Add(ball_position, ball_speed);
-
-            //check boundaries of ball position
-            if(ball_position.Y >= 600 - ball.Height || ball_position.Y <= 0)
-            {
-                ball_speed.Y *= -1;
-            }
-
-            if(ball_position.X < red_player.Width && ball_position.Y > red_position && ball_position.Y < red_position + red_player.Height)
-            {
-                ball_speed.X *= -1;
-                ball_speed.X *= bounce_increase;
-                ball_speed.Y *= bounce_increase;
-            }
-      
-            if (ball_position.X > 900 - blue_player.Width - ball.Width && ball_position.X < 900 && ball_position.Y > blue_position && ball_position.Y < blue_position + blue_player.Height)
-            {
-                ball_speed.X *= -1;
-                ball_speed.X *= bounce_increase;
-                ball_speed.Y *= bounce_increase;
-            }
+            //set previous keyboard state, so we can make sure the settings only activate once per button press
+            previousState = state;
 
             base.Update(gameTime);
         }
@@ -163,33 +219,255 @@ namespace Pong
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            // change background color accordingly with new pngs
-            GraphicsDevice.Clear(Color.White);
+            // change background color
+            GraphicsDevice.Clear(Color.Black);
 
-            // TODO: Add your drawing code here
             spriteBatch.Begin();
 
-            spriteBatch.Draw(ball, new Rectangle((int) ball_position.X, (int) ball_position.Y, ball.Width, ball.Height), Color.White);
-            spriteBatch.Draw(red_player, new Rectangle(0, (int) red_position, red_player.Width, red_player.Height), Color.White);
-            spriteBatch.Draw(blue_player, new Rectangle(900 - blue_player.Width, (int) blue_position, blue_player.Width, blue_player.Height), Color.White);
+            switch (currentState)
+            {
+                case GameStates.Menu:
+                    //MAIN MENU
+                    DrawCenteredString(cms, "PONG", new Vector2(450, 200), Color.White);
+
+                    //Main menu text
+                    DrawCenteredString(arial, "Press [Space] to start", new Vector2(450,340),Color.White);
+                    DrawCenteredString(arial, "or press [S] to go to settings", new Vector2(450, 370), Color.White);
+                    DrawCenteredString(arial, "Controls are {W,S} and {ArrowUp, ArrowDown} for the players", new Vector2(450,400), Color.Gray);
+
+                    break;
+                case GameStates.GameOver:
+                    //GAME OVER
+                    DrawCenteredString(cms, "PONG", new Vector2(450,200), Color.White);
+
+                    //resulting text
+                    DrawCenteredString(arial, "Game over, " + (player_turn ? "Red" : "Blue") + " wins!", new Vector2(450,340), Color.White);
+
+                    //Help text
+                    DrawCenteredString(arial, "Press [Enter] to return to the menu", new Vector2(450, 400), Color.Gray);
+                    DrawCenteredString(arial, "or press [Space] to play again", new Vector2(450, 430), Color.Gray);
+                    break;
+
+                case GameStates.Settings:
+                    //SETTINGS
+                    DrawCenteredString(arial, "Settings", new Vector2(450, 60), Color.Gray);
+
+                    //SELECTOR
+                    DrawCenteredString(arial, "______________", new Vector2(450, 100 + 40 * (int)selectedSetting), Color.Gray);
+
+                    //The settings
+                    DrawCenteredString(arial, "Paddle speed <" + st.paddle_speed + ">", new Vector2(450, 100), Color.White);
+                    DrawCenteredString(arial, "Speed multiplier on bounce <" + st.bounce_increase + ">", new Vector2(450, 140), Color.White);
+                    DrawCenteredString(arial, "Starting speed of ball <" + st.ball_defaultspeed + ">", new Vector2(450, 180), Color.White);
+                    DrawCenteredString(arial, "Amount of lives <" + st.lives + ">", new Vector2(450, 220), Color.White);
+
+                    //Help text
+                    DrawCenteredString(arial, "Use [Arrow keys] to change the values", new Vector2(450, 460), Color.Gray);
+                    DrawCenteredString(arial, "Press [Enter] to return to the menu", new Vector2(450, 500), Color.Gray);
+
+                    break;
+                
+                case GameStates.Game:
+                    //GAME IS RUNNING
+                    //draw middle_line
+                    spriteBatch.Draw(single_pixel, new Rectangle(450, 0, 1, 600), Color.DarkGray);
+
+                    //draw ball and players
+                    spriteBatch.Draw(ball.GetImage(), new Rectangle((int)ball.GetPosition().X, (int)ball.GetPosition().Y, ball.Width, ball.Height), ball.GetColor());
+                    spriteBatch.Draw(redPlayer.GetImage(), new Rectangle((int)redPlayer.GetPosition().X, (int)redPlayer.GetPosition().Y, redPlayer.Width, redPlayer.Height), redPlayer.GetColor());
+                    spriteBatch.Draw(bluePlayer.GetImage(), new Rectangle((int)bluePlayer.GetPosition().X, (int)bluePlayer.GetPosition().Y, bluePlayer.Width, bluePlayer.Height), bluePlayer.GetColor());
+
+                    //drawing red player's lives
+                    for (int i = 0; i < redPlayer.GetLives(); i++)
+                    {
+                        //make sure we dont overflow on the paddle, and instead just draw the remaining lives on the top of the screen
+                        if (i < 3)
+                        {
+                            spriteBatch.Draw(single_pixel, new Rectangle(4, (int)redPlayer.GetPosition().Y + 31 + i * 12, 8, 8), redPlayer.GetColor());
+                        } else
+                        {
+                            spriteBatch.Draw(single_pixel, new Rectangle(20 + i * 12, 4, 8, 8), redPlayer.GetColor());
+                        }
+                    }
+
+                    //drawing blue player's lives
+                    for (int i = 0; i < bluePlayer.GetLives(); i++)
+                    {
+                        //make sure we dont overflow on the paddle, and instead just draw the remaining lives on the top of the screen
+                        if (i < 3)
+                        {
+                            spriteBatch.Draw(single_pixel, new Rectangle((int)900 - bluePlayer.Width + 4, (int)bluePlayer.GetPosition().Y + 31 + i * 12, 8, 8), bluePlayer.GetColor());
+                        } else
+                        {
+                            spriteBatch.Draw(single_pixel, new Rectangle(868 - i * 12, 4, 8, 8), bluePlayer.GetColor());
+                        }
+                    }
+
+                    //create an indication where the ball will move if the game hasn't started yet
+                    if (!has_moved)
+                    {
+                        for (int i = 1; i <= 5; i++)
+                        {
+                            Vector2 nextpos = Vector2.Add(ball.GetPosition(), Vector2.Multiply(ball.GetSpeed(), (float)st.ball_defaultspeed * st.bounce_speed * i * 5));
+                            spriteBatch.Draw(ball.GetImage(), new Rectangle((int)nextpos.X + ball.Width / 2, (int)nextpos.Y + ball.Height / 2, ball.Width / 3, ball.Height / 3), ball.GetColor());
+                        }
+                    }
+                    break;
+            }
+                      
 
             spriteBatch.End();
             base.Draw(gameTime);
         }
 
-        private void resetBall()
+        //reset the ball's position and speed
+        private void ResetBall(bool isRed = false)
         {
-            divider = rng.NextDouble();
-            ball_speed = new Vector2((float)(ball_defaultspeed * divider + ball_defaultspeed * 0.25), (float)(ball_defaultspeed * (1 - divider) + ball_defaultspeed * 0.25));
-            ball_position = new Vector2(450 - ball.Width / 2, 300 - ball.Height / 2);
+            has_moved = false;
+            st.bounce_speed = 1;
 
-            if (rng.Next(0, 2) == 1)
+            //give the ball to the player where the ball has passed
+            if (isRed)
             {
-                ball_speed.X *= -1;
+                player_turn = false;
+                ball.SetSpeed(new Vector2((float)-rng.NextDouble() * 2, (float)rng.NextDouble() * 2 - 1));
+                if(ball.GetSpeed().X < 0.2)
+                {
+                    ball.SetSpeed(new Vector2(-0.2f, 0.8f));
+                }
             }
-            if (rng.Next(0, 2) == 1)
+            else
             {
-                ball_speed.Y *= -1;
+                player_turn = true;
+                ball.SetSpeed(new Vector2((float)rng.NextDouble() * 2, (float)rng.NextDouble() * 2 - 1));
+                if (ball.GetSpeed().X < 0.2)
+                {
+                    ball.SetSpeed(new Vector2(0.2f, 0.8f));
+                }
+            }
+
+            //set new position in the middle of the screen
+            ball.SetPosition(new Vector2(450-ball.Width/2, 300-ball.Height/2));
+            
+        }
+
+        //return coordinates for the center of a string, instead of the upper-left corner
+        private Vector2 CenterString(SpriteFont font, String text)
+        {
+            return new Vector2((font.MeasureString(text).X / 2), (font.MeasureString(text).Y / 2));
+        }
+
+        //draw a string, centered on its position.
+        private void DrawCenteredString(SpriteFont font, String text, Vector2 position, Color color)
+        {
+            spriteBatch.DrawString(font, text, Vector2.Subtract(position, CenterString(font, text)), color);
+        }
+
+        //the function that runs every tick while the game is running
+        private void RunGame()
+        {
+            //reset ball and remove a life when ball passes paddle on the left side
+            if (ball.GetPosition().X < -20)
+            {
+                redPlayer.SetLives(redPlayer.GetLives() - 1);
+                ResetBall(true);
+
+                //if out of lives
+                if(redPlayer.GetLives() < 1)
+                {
+                    currentState = GameStates.GameOver;
+                    redPlayer.SetLives(3);
+                    bluePlayer.SetLives(3);
+                }
+            }
+
+            //reset ball and remove a life when ball passes paddle on the right side
+            if (ball.GetPosition().X > 920)
+            {
+                bluePlayer.SetLives(bluePlayer.GetLives() - 1);
+                ResetBall(false);
+
+                //if out of lives
+                if (bluePlayer.GetLives() < 1)
+                {
+                    currentState = GameStates.GameOver;
+                    redPlayer.SetLives(3);
+                    bluePlayer.SetLives(3);
+                }
+            }
+
+            //set the current keyboard state
+            KeyboardState state = Keyboard.GetState();
+
+            //RED PLAYER UP
+            if (state.IsKeyDown(Keys.W) && redPlayer.GetPosition().Y > 0)
+            {
+                redPlayer.SetPosition(new Vector2(0, (float)(redPlayer.GetPosition().Y - st.paddle_speed)));
+                has_moved = true;
+            }
+            //RED PLAYER DOWN
+            if (state.IsKeyDown(Keys.S) && redPlayer.GetPosition().Y < 600 - redPlayer.Height)
+            {
+                redPlayer.SetPosition(new Vector2(0, (float)(redPlayer.GetPosition().Y + st.paddle_speed)));
+                has_moved = true;
+            }
+            //BLUE PLAYER UP
+            if (state.IsKeyDown(Keys.Up) && bluePlayer.GetPosition().Y > 0)
+            {
+                bluePlayer.SetPosition(new Vector2(900 - bluePlayer.Width, (float)(bluePlayer.GetPosition().Y - st.paddle_speed)));
+                has_moved = true;
+            }
+            //BLUE PLAYER DOWN
+            if (state.IsKeyDown(Keys.Down) && bluePlayer.GetPosition().Y < 600 - bluePlayer.Height)
+            {
+                bluePlayer.SetPosition(new Vector2(900 - bluePlayer.Width, (float)(bluePlayer.GetPosition().Y + st.paddle_speed)));
+                has_moved = true;
+            }
+
+            //change ball position
+            if (has_moved)
+            {
+                ball.SetPosition(Vector2.Add(ball.GetPosition(), Vector2.Multiply(ball.GetSpeed(), (float)st.ball_defaultspeed * st.bounce_speed)));
+            }
+
+            //check boundaries of ball position vertically
+            if (ball.GetPosition().Y >= 600 - ball.Height || ball.GetPosition().Y <= 0)
+            {
+                ball.InvertY();
+            }
+
+            //bounce on the red paddle
+            if (player_turn == false && ball.GetPosition().X < redPlayer.Width && ball.GetPosition().Y > redPlayer.GetPosition().Y - ball.Height && ball.GetPosition().Y < redPlayer.GetPosition().Y + redPlayer.Height)
+            {
+                //calculate new direction
+                double DistanceToMiddle = (redPlayer.GetPosition().Y + redPlayer.Height / 2) - (ball.GetPosition().Y + ball.Height / 2);
+                double normalizedDistance = DistanceToMiddle / (redPlayer.Height / 2);
+
+                //set new direction
+                ball.SetSpeed(new Vector2((float)Math.Cos(normalizedDistance), (float)-Math.Sin(normalizedDistance)));
+
+                //switch player turn
+                player_turn = !player_turn;
+
+                //speed up the ball on bounce
+                st.bounce_speed *= st.bounce_increase;
+            }
+
+            //bounce on the blue paddle
+            if (player_turn == true && ball.GetPosition().X > 900 - bluePlayer.Width - ball.Width && ball.GetPosition().X < 900 && ball.GetPosition().Y > bluePlayer.GetPosition().Y - ball.Height && ball.GetPosition().Y < bluePlayer.GetPosition().Y + bluePlayer.Height)
+            {
+                //calculate new direction
+                double DistanceToMiddle = (bluePlayer.GetPosition().Y + bluePlayer.Height / 2) - (ball.GetPosition().Y + ball.Height / 2);
+                double normalizedDistance = DistanceToMiddle / (bluePlayer.Height / 2);
+
+                //set new direction
+                ball.SetSpeed(new Vector2((float)-Math.Cos(normalizedDistance), (float)-Math.Sin(normalizedDistance)));
+
+                //switch player turn
+                player_turn = !player_turn;
+
+                //speed up the ball on bounce
+                st.bounce_speed *= st.bounce_increase;
             }
         }
     }
