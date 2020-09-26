@@ -10,15 +10,18 @@ namespace Pong.GameClasses
 {
     class Ball
     {
+        //private variables
         private Vector2 position;
         private Vector2 speed;
         private readonly Texture2D image;
         private Color color;
 
+        //public variables
         public int Width;
         public int Height;
         public Ball(Vector2 startingPosition, Vector2 startingSpeed, Texture2D image, Color? color)
         {
+            //set default color if not given
             if (!color.HasValue)
             {
                 this.color = Color.White;
@@ -28,6 +31,7 @@ namespace Pong.GameClasses
                 this.color = (Color)color;
             }
 
+            //assign object variables
             this.position = startingPosition;
             this.speed = startingSpeed;
             this.image = image;
@@ -36,14 +40,10 @@ namespace Pong.GameClasses
             this.Height = this.image.Height;
         }
 
+        //public functions
         public void InvertY()
         {
             this.speed.Y = -this.speed.Y;
-        }
-
-        public void InvertX()
-        {
-            this.speed.X = -this.speed.X;
         }
 
         //SETTERS

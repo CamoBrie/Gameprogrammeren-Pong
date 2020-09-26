@@ -62,7 +62,6 @@
     <Compile Include="GameClasses\Ball.cs" />
     <Compile Include="GameClasses\Settings.cs" />
     <Compile Include="GameClasses\Player.cs" />
-    <Compile Include="GameClasses\Lives.cs" />
     <Compile Include="Pong.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

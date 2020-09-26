@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Pong.GameClasses
 {
-
+    // All possible settings
     enum AllSettings
     {
         paddle_speed,
@@ -18,6 +18,7 @@ namespace Pong.GameClasses
     }
     class Settings
     {
+        //public variables
         public double paddle_speed;
         public float bounce_increase;
         public float bounce_speed;
@@ -26,6 +27,7 @@ namespace Pong.GameClasses
 
         public Settings(double paddle_speed = 10.0, float bounce_increase = 1.05f, double ball_defaultspeed = 7.0, float bounce_speed = 1, int lives = 3)
         {
+            //assign object variables
             this.paddle_speed = paddle_speed;
             this.bounce_increase = bounce_increase;
             this.bounce_speed = bounce_speed;
@@ -33,6 +35,7 @@ namespace Pong.GameClasses
             this.lives = lives;
         }
 
+        //change a value of a setting, with respect to minumum and maximum values
         public void ChangeSetting(bool increase = true, AllSettings currentSetting = 0)
         {
             switch (currentSetting)

@@ -27,19 +27,13 @@ namespace Pong
         Ball ball;
         Settings st;
 
-        //variables for the lives rectangles
+        //variables for the lives rectangles, this is just stretching a single pixel to be our rectangle
         Texture2D single_pixel;
 
         //variables for gameStates
         private bool player_turn;
         private bool has_moved;
         private bool running;
-
-        //settings
-        bool hasPressedLeft = false;
-        bool hasPressedRight = false;
-        bool hasPressedUp = false;
-        bool hasPressedDown = false;
 
         //the actual gamestates
         enum GameStates
@@ -52,6 +46,7 @@ namespace Pong
 
         GameStates currentState;
         AllSettings selectedSetting;
+        KeyboardState previousState;
 
         //random class
         readonly static Random rng = new Random();
@@ -63,7 +58,6 @@ namespace Pong
             IsMouseVisible = true;
 
         }
-
         /// <summary>
         /// Allows the game to perform any initialization it needs to before starting to run.
         /// This is where it can query for any required services and load any non-graphic
@@ -96,6 +90,7 @@ namespace Pong
             redPlayer = new Player(3, Color.IndianRed, Content.Load<Texture2D>("red_player"), new Vector2(0, 300),"West");
             bluePlayer = new Player(3, Color.CornflowerBlue, Content.Load<Texture2D>("blue_player"), new Vector2(884, 300), "East");
 
+            //create a new settings object
             st = new Settings();
 
             //create spritefont
@@ -113,6 +108,8 @@ namespace Pong
 
             currentState = GameStates.Menu;
             selectedSetting = 0;
+
+            //initialize the ball's position and speed
             ResetBall();
         }
 
@@ -132,36 +129,42 @@ namespace Pong
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+
+            //set current keyboard state
+            KeyboardState state = Keyboard.GetState();
+
             //Exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || state.IsKeyDown(Keys.Escape))
             {
                 Exit();
             }
 
+            //change what happens based on the current gamestate
             switch(currentState)
             {
                 case GameStates.Menu:
-                    if (Keyboard.GetState().IsKeyDown(Keys.Space))
+                    //MAIN MENU
+                    if (state.IsKeyDown(Keys.Space))
                     {
                         currentState = GameStates.Game;
                     }
-                    if (Keyboard.GetState().IsKeyDown(Keys.S))
+                    if (state.IsKeyDown(Keys.S))
                     {
                         currentState = GameStates.Settings;
                     }
                     break;
                 case GameStates.GameOver:
+                    //GAME OVER
                     running = false;
-                    if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+                    if (state.IsKeyDown(Keys.Enter))
                     {
                         currentState = GameStates.Menu;
                     }
-                    if (Keyboard.GetState().IsKeyDown(Keys.Space))
+                    if (state.IsKeyDown(Keys.Space))
                     {
                         currentState = GameStates.Game;
                         ResetBall();
                     }
-                    //GAME OVER
                     break;
                 case GameStates.Game:
                     //GAME IS RUNNING
@@ -174,62 +177,38 @@ namespace Pong
                     RunGame();
                     break;
                 case GameStates.Settings:
-                    if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+                    if (state.IsKeyDown(Keys.Enter))
                     {
                         currentState = GameStates.Menu;
                     }
 
-                    if (Keyboard.GetState().IsKeyDown(Keys.Left) && !hasPressedLeft)
+                    if (state.IsKeyDown(Keys.Left) && !previousState.IsKeyDown(Keys.Left))
                     {
-                        hasPressedLeft = true;
                         st.ChangeSetting(false, selectedSetting);
                     }
-                    if (Keyboard.GetState().IsKeyDown(Keys.Right) && !hasPressedRight)
+                    if (state.IsKeyDown(Keys.Right) && !previousState.IsKeyDown(Keys.Right))
                     {
-                        hasPressedRight = true;
                         st.ChangeSetting(true, selectedSetting);
                     }
-                    if (Keyboard.GetState().IsKeyDown(Keys.Up) && !hasPressedUp)
+                    if (state.IsKeyDown(Keys.Up) && !previousState.IsKeyDown(Keys.Up))
                     {
-                        hasPressedUp = true;
                         if (selectedSetting > 0)
                         {
                             selectedSetting--;
                         }
-
                     }
-                    if (Keyboard.GetState().IsKeyDown(Keys.Down) && !hasPressedDown)
+                    if (state.IsKeyDown(Keys.Down) && !previousState.IsKeyDown(Keys.Down))
                     {
-                        hasPressedDown = true;
-                        if ((int) selectedSetting < (int) Enum.GetValues(typeof(AllSettings)).Length-1)
+                        if ((int) selectedSetting < Enum.GetValues(typeof(AllSettings)).Length-1)
                         {
                             selectedSetting++;
                         }
                     }
-
-
-                    if (Keyboard.GetState().IsKeyUp(Keys.Left))
-                    {
-                        hasPressedLeft = false;
-                    }
-                    if (Keyboard.GetState().IsKeyUp(Keys.Right))
-                    {
-                        hasPressedRight = false;                    
-                    }
-                    if (Keyboard.GetState().IsKeyUp(Keys.Up))
-                    {
-                        hasPressedUp = false;
-                    }
-                    if (Keyboard.GetState().IsKeyUp(Keys.Down))
-                    {
-                        hasPressedDown = false;
-                    }
-
                     break;
-
             }
 
-
+            //set previous keyboard state, so we can make sure the settings only activate once per button press
+            previousState = state;
 
             base.Update(gameTime);
         }
@@ -240,7 +219,7 @@ namespace Pong
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            // change background color accordingly with new pngs
+            // change background color
             GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin();
@@ -301,6 +280,7 @@ namespace Pong
                     //drawing red player's lives
                     for (int i = 0; i < redPlayer.GetLives(); i++)
                     {
+                        //make sure we dont overflow on the paddle, and instead just draw the remaining lives on the top of the screen
                         if (i < 3)
                         {
                             spriteBatch.Draw(single_pixel, new Rectangle(4, (int)redPlayer.GetPosition().Y + 31 + i * 12, 8, 8), redPlayer.GetColor());
@@ -313,6 +293,7 @@ namespace Pong
                     //drawing blue player's lives
                     for (int i = 0; i < bluePlayer.GetLives(); i++)
                     {
+                        //make sure we dont overflow on the paddle, and instead just draw the remaining lives on the top of the screen
                         if (i < 3)
                         {
                             spriteBatch.Draw(single_pixel, new Rectangle((int)900 - bluePlayer.Width + 4, (int)bluePlayer.GetPosition().Y + 31 + i * 12, 8, 8), bluePlayer.GetColor());
@@ -322,6 +303,7 @@ namespace Pong
                         }
                     }
 
+                    //create an indication where the ball will move if the game hasn't started yet
                     if (!has_moved)
                     {
                         for (int i = 1; i <= 5; i++)
@@ -338,10 +320,13 @@ namespace Pong
             base.Draw(gameTime);
         }
 
+        //reset the ball's position and speed
         private void ResetBall(bool isRed = false)
         {
             has_moved = false;
             st.bounce_speed = 1;
+
+            //give the ball to the player where the ball has passed
             if (isRed)
             {
                 player_turn = false;
@@ -360,27 +345,34 @@ namespace Pong
                     ball.SetSpeed(new Vector2(0.2f, 0.8f));
                 }
             }
+
+            //set new position in the middle of the screen
             ball.SetPosition(new Vector2(450-ball.Width/2, 300-ball.Height/2));
             
         }
 
+        //return coordinates for the center of a string, instead of the upper-left corner
         private Vector2 CenterString(SpriteFont font, String text)
         {
             return new Vector2((font.MeasureString(text).X / 2), (font.MeasureString(text).Y / 2));
         }
 
+        //draw a string, centered on its position.
         private void DrawCenteredString(SpriteFont font, String text, Vector2 position, Color color)
         {
             spriteBatch.DrawString(font, text, Vector2.Subtract(position, CenterString(font, text)), color);
         }
 
+        //the function that runs every tick while the game is running
         private void RunGame()
         {
-            //reset ball and remove a life when ball passes paddle
+            //reset ball and remove a life when ball passes paddle on the left side
             if (ball.GetPosition().X < -20)
             {
                 redPlayer.SetLives(redPlayer.GetLives() - 1);
                 ResetBall(true);
+
+                //if out of lives
                 if(redPlayer.GetLives() < 1)
                 {
                     currentState = GameStates.GameOver;
@@ -389,10 +381,13 @@ namespace Pong
                 }
             }
 
+            //reset ball and remove a life when ball passes paddle on the right side
             if (ball.GetPosition().X > 920)
             {
                 bluePlayer.SetLives(bluePlayer.GetLives() - 1);
                 ResetBall(false);
+
+                //if out of lives
                 if (bluePlayer.GetLives() < 1)
                 {
                     currentState = GameStates.GameOver;
@@ -401,27 +396,29 @@ namespace Pong
                 }
             }
 
+            //set the current keyboard state
+            KeyboardState state = Keyboard.GetState();
 
             //RED PLAYER UP
-            if (Keyboard.GetState().IsKeyDown(Keys.W) && redPlayer.GetPosition().Y > 0)
+            if (state.IsKeyDown(Keys.W) && redPlayer.GetPosition().Y > 0)
             {
                 redPlayer.SetPosition(new Vector2(0, (float)(redPlayer.GetPosition().Y - st.paddle_speed)));
                 has_moved = true;
             }
             //RED PLAYER DOWN
-            if (Keyboard.GetState().IsKeyDown(Keys.S) && redPlayer.GetPosition().Y < 600 - redPlayer.Height)
+            if (state.IsKeyDown(Keys.S) && redPlayer.GetPosition().Y < 600 - redPlayer.Height)
             {
                 redPlayer.SetPosition(new Vector2(0, (float)(redPlayer.GetPosition().Y + st.paddle_speed)));
                 has_moved = true;
             }
             //BLUE PLAYER UP
-            if (Keyboard.GetState().IsKeyDown(Keys.Up) && bluePlayer.GetPosition().Y > 0)
+            if (state.IsKeyDown(Keys.Up) && bluePlayer.GetPosition().Y > 0)
             {
                 bluePlayer.SetPosition(new Vector2(900 - bluePlayer.Width, (float)(bluePlayer.GetPosition().Y - st.paddle_speed)));
                 has_moved = true;
             }
             //BLUE PLAYER DOWN
-            if (Keyboard.GetState().IsKeyDown(Keys.Down) && bluePlayer.GetPosition().Y < 600 - bluePlayer.Height)
+            if (state.IsKeyDown(Keys.Down) && bluePlayer.GetPosition().Y < 600 - bluePlayer.Height)
             {
                 bluePlayer.SetPosition(new Vector2(900 - bluePlayer.Width, (float)(bluePlayer.GetPosition().Y + st.paddle_speed)));
                 has_moved = true;
@@ -433,38 +430,37 @@ namespace Pong
                 ball.SetPosition(Vector2.Add(ball.GetPosition(), Vector2.Multiply(ball.GetSpeed(), (float)st.ball_defaultspeed * st.bounce_speed)));
             }
 
-            //check boundaries of ball position
+            //check boundaries of ball position vertically
             if (ball.GetPosition().Y >= 600 - ball.Height || ball.GetPosition().Y <= 0)
             {
                 ball.InvertY();
             }
 
+            //bounce on the red paddle
             if (player_turn == false && ball.GetPosition().X < redPlayer.Width && ball.GetPosition().Y > redPlayer.GetPosition().Y - ball.Height && ball.GetPosition().Y < redPlayer.GetPosition().Y + redPlayer.Height)
             {
+                //calculate new direction
                 double DistanceToMiddle = (redPlayer.GetPosition().Y + redPlayer.Height / 2) - (ball.GetPosition().Y + ball.Height / 2);
                 double normalizedDistance = DistanceToMiddle / (redPlayer.Height / 2);
 
-
+                //set new direction
                 ball.SetSpeed(new Vector2((float)Math.Cos(normalizedDistance), (float)-Math.Sin(normalizedDistance)));
-
 
                 //switch player turn
                 player_turn = !player_turn;
 
                 //speed up the ball on bounce
                 st.bounce_speed *= st.bounce_increase;
-
-
-
             }
 
+            //bounce on the blue paddle
             if (player_turn == true && ball.GetPosition().X > 900 - bluePlayer.Width - ball.Width && ball.GetPosition().X < 900 && ball.GetPosition().Y > bluePlayer.GetPosition().Y - ball.Height && ball.GetPosition().Y < bluePlayer.GetPosition().Y + bluePlayer.Height)
             {
-
+                //calculate new direction
                 double DistanceToMiddle = (bluePlayer.GetPosition().Y + bluePlayer.Height / 2) - (ball.GetPosition().Y + ball.Height / 2);
                 double normalizedDistance = DistanceToMiddle / (bluePlayer.Height / 2);
 
-
+                //set new direction
                 ball.SetSpeed(new Vector2((float)-Math.Cos(normalizedDistance), (float)-Math.Sin(normalizedDistance)));
 
                 //switch player turn

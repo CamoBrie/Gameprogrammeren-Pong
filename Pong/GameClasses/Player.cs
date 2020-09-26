@@ -11,7 +11,8 @@ namespace Pong.GameClasses
 {
     class Player
     {
-        private readonly Lives lives;
+        //private variables
+        private int lives;
         private Color color;
         private readonly String side;
         private readonly Texture2D image;
@@ -31,7 +32,8 @@ namespace Pong.GameClasses
                 this.color = (Color) color;
             }
 
-            this.lives = new Lives(lives);
+            //assign object variables
+            this.lives = lives;
             this.position = startingPosition; 
             this.side = side;
             this.image = image;
@@ -42,7 +44,7 @@ namespace Pong.GameClasses
         //SETTERS
         public void SetLives(int currentLives)
         {
-            lives.SetLives(currentLives);
+            this.lives = currentLives;
         }
 
         public void SetPosition(Vector2 newPosition)
@@ -53,7 +55,7 @@ namespace Pong.GameClasses
         //GETTERS
         public int GetLives()
         {
-            return lives.GetLives();
+            return this.lives;
         }
 
         public Color GetColor()
